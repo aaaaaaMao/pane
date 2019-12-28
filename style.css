@@ -13,8 +13,8 @@ html, body {
 }
 
 #top-menu {
-  height: 5%;
-  background-color: #2980b9;
+  height: 20px;
+  background-color: #ecececb0;
 }
 
 #content-div {
@@ -23,6 +23,13 @@ html, body {
 }
 
 #tool-bar {
+  width: 10%;
+  height: 100%;
+  float: left;
+  background-color: #bdc3c7;
+}
+
+#color-bar {
   width: 10%;
   height: 100%;
   float: left;

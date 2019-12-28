@@ -138,4 +138,21 @@ function randomPointInRadius(radius) {
       event.preventDefault();
     }
   });
+
+  let colorInput = document.querySelector('input#color-tool');
+  colorInput.addEventListener('change', () => {
+    cx.fillStyle = colorInput.value;
+    cx.strokeStyle = colorInput.value;
+  });
+
+  let brushSize = document.querySelector('select#brush-size');
+  let sizes = [1, 2, 3, 5, 8, 12, 25, 35, 50, 75, 100];
+  sizes.forEach(size => {
+    brushSize.appendChild(createElement("option", {value: size}, `${size} pixels`));
+  });
+
+  brushSize.addEventListener('change', () => {
+    cx.lineWidth = brushSize.value;
+  });
+
 })(context);
