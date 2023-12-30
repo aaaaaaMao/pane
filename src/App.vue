@@ -2,6 +2,8 @@
 import { onMounted, ref } from 'vue'
 const mainCanvas = ref<any>()
 const paintTools = ref<any>()
+const colorSelector = ref<any>()
+const brushSizeSelector = ref<any>()
 
 const tools = ref([{
   name: 'Line',
@@ -16,6 +18,8 @@ const tools = ref([{
   name: 'Spray',
   do: spray,
 }])
+
+const sizes = ref([1, 2, 3, 5, 8, 12, 25, 35, 50, 75, 100])
 
 onMounted(() => {
   const context: CanvasRenderingContext2D = mainCanvas.value.getContext('2d')
@@ -35,6 +39,16 @@ onMounted(() => {
       }
       event.preventDefault()
     }
+  })
+
+  colorSelector.value.addEventListener('change', () => {
+    const color = colorSelector.value.value
+    context.fillStyle = color
+    context.strokeStyle = color
+  })
+
+  brushSizeSelector.value.addEventListener('change', () => {
+    context.lineWidth = brushSizeSelector.value.value
   })
 
 })
@@ -169,13 +183,14 @@ function randomPointInRadius(radius: number) {
 
         <div>
           <span>Color:
-            <input type="color" id="color-tool">
+            <input type="color" id="color-tool" ref="colorSelector">
           </span>
         </div>
 
         <div>
           <span>Brush size:
-            <select id="brush-size">
+            <select id="brush-size" ref="brushSizeSelector">
+              <option v-for="size of sizes" :key="size">{{ size }}</option>
             </select>
           </span>
         </div>
