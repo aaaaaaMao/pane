@@ -1,6 +1,21 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-const mainCanvas = ref<any>(null)
+const mainCanvas = ref<any>()
+const paintTools = ref<any>()
+
+const tools = ref([{
+  name: 'Line',
+  do: drawLine,
+}, {
+  name: 'Erase',
+  do: erase,
+}, {
+  name: 'Text',
+  do: drawText,
+}, {
+  name: 'Spray',
+  do: spray,
+}])
 
 onMounted(() => {
   const context: CanvasRenderingContext2D = mainCanvas.value.getContext('2d')
@@ -10,6 +25,17 @@ onMounted(() => {
   let ratio = devicePixelRatio / backingStoreRatio
 
   scale(context, ratio)
+
+  context.canvas.addEventListener('mousedown', (event: any) => {
+    if (event.which == 1) {
+      const toolName = paintTools.value.value
+      const tool = tools.value.find(x => x.name === toolName)
+      if (tool) {
+        tool.do(event, context)
+      }
+      event.preventDefault()
+    }
+  })
 
 })
 
@@ -60,6 +86,69 @@ function trackDrag(onMove: any, onEnd: any) {
   addEventListener("mouseup", end);
 }
 
+function drawLine(event: any, ctx: CanvasRenderingContext2D, onEnd?: any) {
+  ctx.lineCap = "round"
+
+  var pos = relativePos(event, ctx.canvas)
+  trackDrag(function (event: any) {
+    ctx.beginPath()
+    ctx.moveTo(pos.x, pos.y)
+    // console.log('b', pos.x, pos.y)
+
+    pos = relativePos(event, ctx.canvas)
+    ctx.lineTo(pos.x, pos.y)
+    // console.log('e', pos.x, pos.y)
+
+    ctx.stroke()
+  }, onEnd)
+}
+
+function erase(event: any, ctx: CanvasRenderingContext2D) {
+  ctx.globalCompositeOperation = "destination-out"
+  drawLine(event, ctx, function () {
+    ctx.globalCompositeOperation = "source-over"
+  })
+}
+
+function drawText(event: any, ctx: CanvasRenderingContext2D) {
+  const text = prompt("Text:", "")
+
+  if (text) {
+    var pos = relativePos(event, ctx.canvas)
+    ctx.font = Math.max(7, ctx.lineWidth) + "px sans-serif"
+    ctx.fillText(text, pos.x, pos.y)
+  }
+}
+
+function spray(event: any, ctx: CanvasRenderingContext2D) {
+  var radius = ctx.lineWidth / 2
+  var area = radius * radius * Math.PI
+  var dotsPerTick = Math.ceil(area / 30)
+
+  var currentPos = relativePos(event, ctx.canvas)
+  var spray = setInterval(function () {
+    for (var i = 0; i < dotsPerTick; i++) {
+      var offset = randomPointInRadius(radius)
+      ctx.fillRect(currentPos.x + offset.x,
+        currentPos.y + offset.y, 1, 1)
+    }
+  }, 25);
+  trackDrag(function (event: any) {
+    currentPos = relativePos(event, ctx.canvas);
+  }, function () {
+    clearInterval(spray);
+  })
+}
+
+function randomPointInRadius(radius: number) {
+  for (; ;) {
+    var x = Math.random() * 2 - 1;
+    var y = Math.random() * 2 - 1;
+    if (x * x + y * y <= 1)
+      return { x: x * radius, y: y * radius };
+  }
+}
+
 </script>
 
 <template>
@@ -72,7 +161,8 @@ function trackDrag(onMove: any, onEnd: any) {
 
         <div>
           <span>Tool:
-            <select id="paint-tools">
+            <select id="paint-tools" ref="paintTools">
+              <option v-for="tool in tools" :key="tool.name">{{ tool.name }}</option>
             </select>
           </span>
         </div>
